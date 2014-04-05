@@ -24,7 +24,12 @@ sources
 ## Usage
 
 ```bash
-$ markbook sourcesDir outputDir --book "Your book name" 
+$ # build it
+$ markbook sourcesDir outputDir --book "Your book name"
+$ # serve it
+$ npm install anywhere -g # optional
+$ cd outputDir
+$ anywhere
 ```
 
 ## License
