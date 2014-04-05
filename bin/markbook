@@ -1,0 +1,164 @@
+#!/usr/bin/env node
+
+// markbook inputdir outputdir --book "JavaScript词典"
+
+var fs = require('fs');
+var fsx = require('fs-extra');
+var path = require('path');
+
+var argv = require('minimist')(process.argv.slice(2));
+var marked = require('marked');
+var ejs = require('ejs');
+
+marked.setOptions({
+  highlight: function (code) {
+    return require('highlight.js').highlightAuto(code).value;
+  }
+});
+
+var inputDir = path.resolve(argv._[0] || 'sources');
+var outputDir = path.resolve(argv._[1] || 'exports');
+var templateDir = path.join(__dirname, '..', 'templates');
+var book = argv.book || '未命名图书';
+
+var sectionTpl = fs.readFileSync(path.join(templateDir, 'section.ejs'), 'utf-8');
+
+var filter = function (filename) {
+  // 文件名中不能有`/`
+  return filename.trim().replace(/\//g, '或');
+};
+
+var getSection = function (filename) {
+  if (/^\d/.test(filename)) {
+    return parseInt(filename, 10);
+  } else if (/^附录/.test(filename)) {
+    return filename.match(/附录([A-Z])/)[1];
+  }
+};
+
+var getTitle = function (section) {
+  if (/\d/.test(section)) {
+    return ' 第' + section + '章';
+  } else if (/[A-Z]/.test(section)) {
+    return ' 附录' + section;
+  } else {
+    return '';
+  }
+};
+
+// ![AJAX调用](./figures/02/ajax.png)
+var imageRE = /\!\[[^\]]*]\((.*)\)/g;
+var imageURL = 'https://raw.github.com/JacksonTian/diveintonode_figures/master';
+var replaceImage = function (content) {
+  return content.replace(imageRE, function (whole, filepath) {
+    var mirror = filepath.replace('./figures', imageURL);
+    return whole.replace(filepath, mirror);
+  });
+};
+
+var codeRE = /^```(?:\w+)?\n([\s\S]*?)\n```/mg;
+var replaceCode = function (content) {
+  return content.replace(codeRE, function (match, match1) {
+    return '    ' + match1.replace(/\n/g, '\n    ');
+  });
+};
+
+var splitable = function (filename) {
+  return (/^(\d\d|附录)/).test(filename);
+};
+
+var index = [];
+
+var split = function (filename) {
+  var real = path.join(inputDir, filename);
+  var content = fs.readFileSync(real, 'utf-8');
+  var spliter = /(?=^#{2,3}[^#])/igm;
+  var titleReg = /[^\n]*/;
+  var contents = splitable(filename) ? content.split(spliter) : [content];
+  var section  = getSection(filename);
+  // 章节计数器
+  var counter = {
+    '1': 0,
+    '2': 0,
+    '3': 0
+  };
+  var prelevel;
+  contents.forEach(function (content) {
+    var title = content.match(titleReg)[0];
+    var level = title.match(/#/g).length;
+    title = title.replace(/#/g, '').trim();
+    if (prelevel && level !== prelevel) {
+      counter[level + 1] = 0;
+    }
+    prelevel = level;
+    counter[level]++;
+    var prefix = '';
+    switch (level) {
+      case 1:
+        prefix = getTitle(section);
+        break;
+      case 2:
+        prefix = [section, counter[level]].join('.');
+        break;
+      case 3:
+        prefix = [section, counter[level - 1], counter[level]].join('.');
+        break;
+    }
+
+    var markdown = replaceImage(replaceCode(content));
+    var target = path.join(outputDir, filter(prefix + ' ' + title) + '.html');
+    index.push({
+      title: prefix + ' ' + title,
+      url: target,
+      level: level,
+      content: marked(markdown)
+    });
+    // console.log('写入‘' + target + '‘');
+  });
+  // console.log('分拆‘' + filename + '’完成');
+};
+
+// 读取所有的Markdown文件
+var files = fs.readdirSync(inputDir);
+files = files.filter(function (filename) {
+  return path.extname(filename) === '.md' && filename !== 'README.md';
+});
+
+files.forEach(split);
+
+var indexes = index.map(function (item) {
+  var padding = '';
+  for (var i = 0; i < item.level - 1; i++) {
+    padding += '  ';
+  }
+  return padding + '- [' + item.title + '](' + path.relative(outputDir, item.url) + ')';
+}).join('\n');
+
+var indexes = marked(indexes);
+
+index.forEach(function (item) {
+  fs.writeFileSync(item.url, ejs.render(sectionTpl, {
+    title: item.title,
+    indexes: indexes,
+    content: item.content,
+    book: book
+  }));
+});
+
+fs.writeFileSync(path.join(outputDir, 'README.html'), ejs.render(sectionTpl, {
+  title: book + '简介',
+  indexes: indexes,
+  content: marked(fs.readFileSync(path.join(inputDir, 'README.md'), 'utf-8')),
+  book: book
+}));
+
+fsx.copy(path.join(templateDir, 'assets'), path.join(outputDir, 'assets'), function(err){
+  if (err) return console.error(err);
+  // console.log("success!")
+}); //copies file
+fsx.copy(path.join(templateDir, 'index.ejs'), path.join(outputDir, 'index.html'), function(err){
+  if (err) return console.error(err);
+  // console.log("success!")
+}); //copies file
+
+console.log('完成构建');

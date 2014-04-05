@@ -1,0 +1,26 @@
+{
+  "name": "markbook",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/JacksonTian/markbook.git"
+  },
+  "author": "Jackson Tian",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/JacksonTian/markbook/issues"
+  },
+  "homepage": "https://github.com/JacksonTian/markbook",
+  "dependencies": {
+    "ejs": "*",
+    "marked": "*",
+    "minimist": "*",
+    "fs-extra": "*",
+    "highlight.js": "*"
+  }
+}
