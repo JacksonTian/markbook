@@ -61,16 +61,6 @@ var getTitle = function (section) {
   }
 };
 
-// ![AJAX调用](./figures/02/ajax.png)
-var imageRE = /\!\[[^\]]*]\((.*)\)/g;
-var imageURL = 'https://raw.github.com/JacksonTian/diveintonode_figures/master';
-var replaceImage = function (content) {
-  return content.replace(imageRE, function (whole, filepath) {
-    var mirror = filepath.replace('./figures', imageURL);
-    return whole.replace(filepath, mirror);
-  });
-};
-
 var codeRE = /^```(?:\w+)?\n([\s\S]*?)\n```/mg;
 var replaceCode = function (content) {
   return content.replace(codeRE, function (match, match1) {
@@ -124,7 +114,7 @@ var split = function (filename) {
         break;
     }
 
-    var markdown = replaceImage(replaceCode(content));
+    var markdown = replaceCode(content);
     var target = path.join(outputDir, prefix + '.html');
     index.push({
       title: finalTitle,
@@ -181,5 +171,12 @@ fsx.copy(path.join(templateDir, 'index.ejs'), path.join(outputDir, 'index.html')
   if (err) return console.error(err);
   // console.log("success!")
 });
+var figuresDir = path.join(inputDir, 'figures');
+if (fs.existsSync(figuresDir)) {
+  fsx.copy(figuresDir, path.join(outputDir, 'figures'), function(err){
+    if (err) return console.error(err);
+    // console.log("success!")
+  });
+}
 
 console.log('完成构建');

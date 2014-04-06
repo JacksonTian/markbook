@@ -16,8 +16,9 @@ $ npm install markbook -g
 
 ```
 sources
-├── 01_Introduction.md // 第1章
+├── 01_Introduction.md // 第1章，按{dd}_{章节名}.md
 ├── 02_Module.md // 第2章，按{dd}_{章节名}.md
+├── figures // 如果有图片，请放在此目录下
 └── README.md // 用来做说明页
 ```
 
