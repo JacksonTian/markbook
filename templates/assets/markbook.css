@@ -8,6 +8,9 @@ html, body, ul, li {
 body {
   font: 13px Helvetica, arial, freesans, clean, sans-serif;
 }
+.url {
+  display: none;
+}
 .header {
   position: fixed;
   top: 0;

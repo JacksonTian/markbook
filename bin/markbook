@@ -16,10 +16,25 @@ marked.setOptions({
   }
 });
 
-var inputDir = path.resolve(argv._[0] || 'sources');
-var outputDir = path.resolve(argv._[1] || 'exports');
-var templateDir = path.join(__dirname, '..', 'templates');
+if (argv._.length < 2) {
+  console.log('markbook提醒您：');
+  console.log('  参数错误');
+  console.log('');
+  console.log('Usage:');
+  console.log('  markbook sources exports');
+  console.log('  markbook sources exports --book "书名"');
+  process.exit(1);
+}
+
+// markdown文件所在目录
+var inputDir = path.resolve(argv._[0]);
+// 将要输出的目录
+var outputDir = path.resolve(argv._[1]);
+// 书名
 var book = argv.book || '未命名图书';
+
+// 模版位置
+var templateDir = path.join(__dirname, '..', 'templates');
 
 var sectionTpl = fs.readFileSync(path.join(templateDir, 'section.ejs'), 'utf-8');
 
@@ -93,22 +108,26 @@ var split = function (filename) {
     prelevel = level;
     counter[level]++;
     var prefix = '';
+    var finalTitle = '';
     switch (level) {
       case 1:
-        prefix = getTitle(section);
+        prefix = section;
+        finalTitle = '第' + section + '章 ' + title;
         break;
       case 2:
         prefix = [section, counter[level]].join('.');
+        finalTitle = prefix + ' ' + title;
         break;
       case 3:
         prefix = [section, counter[level - 1], counter[level]].join('.');
+        finalTitle = prefix + ' ' + title;
         break;
     }
 
     var markdown = replaceImage(replaceCode(content));
-    var target = path.join(outputDir, filter(prefix + ' ' + title) + '.html');
+    var target = path.join(outputDir, prefix + '.html');
     index.push({
-      title: prefix + ' ' + title,
+      title: finalTitle,
       url: target,
       level: level,
       content: marked(markdown)
@@ -139,6 +158,7 @@ var indexes = marked(indexes);
 index.forEach(function (item) {
   fs.writeFileSync(item.url, ejs.render(sectionTpl, {
     title: item.title,
+    url: path.relative(outputDir, item.url),
     indexes: indexes,
     content: item.content,
     book: book
@@ -147,6 +167,7 @@ index.forEach(function (item) {
 
 fs.writeFileSync(path.join(outputDir, 'README.html'), ejs.render(sectionTpl, {
   title: book + '简介',
+  url: "README.html",
   indexes: indexes,
   content: marked(fs.readFileSync(path.join(inputDir, 'README.md'), 'utf-8')),
   book: book
@@ -159,6 +180,6 @@ fsx.copy(path.join(templateDir, 'assets'), path.join(outputDir, 'assets'), funct
 fsx.copy(path.join(templateDir, 'index.ejs'), path.join(outputDir, 'index.html'), function(err){
   if (err) return console.error(err);
   // console.log("success!")
-}); //copies file
+});
 
 console.log('完成构建');

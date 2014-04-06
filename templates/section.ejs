@@ -7,6 +7,7 @@
   <link rel="stylesheet" type="text/css" href="assets/github.css">
 </head>
 <body>
+  <div class="url"><%=url%></div>
   <div class="header">
     <h1><a href="README.html"><%=book%></a></h1>
   </div>
@@ -20,5 +21,21 @@
       <%-content%>
     </div>
   </div>
+  <script type="text/javascript">
+    var $ = function (selector) {
+      return document.querySelector(selector);
+    };
+    var url = $('.url').innerText;
+    localStorage.setItem(url, true);
+    for (var i = 0; i < localStorage.length; i++) {
+      var link = $('a[href="' + localStorage.key(i) + '"]');
+      if (link) {
+        link.style.color = "green";
+      }
+    }
+    window.onload = function () {
+      $('.sidebar').scrollTop = $('a[href="' + url + '"]').offsetTop;
+    };
+  </script>
 </body>
 </html>
