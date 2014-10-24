@@ -1,6 +1,6 @@
 {
   "name": "markbook",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Write in Markdown, generate book for you",
   "main": "index.js",
   "scripts": {
