@@ -163,18 +163,24 @@ fs.writeFileSync(path.join(outputDir, 'README.html'), ejs.render(sectionTpl, {
   book: book
 }));
 
-fsx.copy(path.join(templateDir, 'assets'), path.join(outputDir, 'assets'), function(err){
-  if (err) return console.error(err);
+fsx.copy(path.join(templateDir, 'assets'), path.join(outputDir, 'assets'), function (err) {
+  if (err) {
+    return console.error(err);
+  }
   // console.log("success!")
 }); //copies file
-fsx.copy(path.join(templateDir, 'index.ejs'), path.join(outputDir, 'index.html'), function(err){
-  if (err) return console.error(err);
+fsx.copy(path.join(templateDir, 'index.ejs'), path.join(outputDir, 'index.html'), function (err) {
+  if (err) {
+    return console.error(err);
+  }
   // console.log("success!")
 });
 var figuresDir = path.join(inputDir, 'figures');
 if (fs.existsSync(figuresDir)) {
-  fsx.copy(figuresDir, path.join(outputDir, 'figures'), function(err){
-    if (err) return console.error(err);
+  fsx.copy(figuresDir, path.join(outputDir, 'figures'), function (err) {
+    if (err) {
+      return console.error(err);
+    }
     // console.log("success!")
   });
 }
